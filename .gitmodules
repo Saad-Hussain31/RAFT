@@ -1,6 +1,3 @@
-[submodule "modules/SystemAbstractions"]
-	path = modules/SystemAbstractions
-	url = git@github.com:rhymu8354/SystemAbstractions.git
 [submodule "modules/googletest"]
 	path = modules/googletest
 	url = git@github.com:google/googletest.git

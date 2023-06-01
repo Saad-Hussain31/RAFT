@@ -1,19 +1,22 @@
 cmake_minimum_required(VERSION 3.8)
 
 
-set(Sources
-    src/ServerTests.cpp
-)
+include_directories(../3rdparty/header/)
+include_directories(../include)
+
+
+
+set(Sources ServerTests.cpp)
 
 add_executable(RaftTests ${Sources})
 
-target_link_libraries(${This} PUBLIC
+
+
+target_link_libraries(RaftTests PUBLIC
     gtest
-    Raft
-    SystemAbstractions
+    # Raft
+    /home/alma/raft/build/libRaft.a
+    /home/alma/raft/3rdparty/lib/libStringExtensions.a
+    /home/alma/raft/3rdparty/lib/libSystemAbstractions.a
 )
 
-add_test(
-    NAME ${This}
-    COMMAND ${This}
-)

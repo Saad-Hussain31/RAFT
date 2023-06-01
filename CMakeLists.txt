@@ -2,12 +2,17 @@ cmake_minimum_required(VERSION 3.20)
 project(RAFT)
 set(CMAKE_CXX_STANDARD 17)
 
+set(systemPath 3rdparty/lib/libSystemAbstractions.a)
+set(stringPath 3rdparty/lib/libStringExtensions.a)
+
+
+
 add_subdirectory(modules/googletest)
-add_subdirectory(modules/SystemAbstractions)
-
-
+add_subdirectory(test)
 
 include_directories(include)
+include_directories(3rdparty/header/)
+
 
 set(Headers
     include/IServer.hpp
@@ -19,10 +24,17 @@ set(Headers
 set(Sources
     src/Server.cpp
 )
- 
-add_library(Raft STATIC  ${Sources} ${Headers})
-target_include_directories(Raft PUBLIC include)
-target_link_libraries(Raft SystemAbstractions)
+
+
+
+add_library(Raft STATIC ${Sources} ${Headers})
+# target_include_directories(Raft PUBLIC include)
+
+
+target_link_libraries(Raft PUBLIC
+                    /home/alma/raft/3rdparty/lib/libStringExtensions.a
+                    /home/alma/raft/3rdparty/lib/libSystemAbstractions.a
+                    )
 
 
 
