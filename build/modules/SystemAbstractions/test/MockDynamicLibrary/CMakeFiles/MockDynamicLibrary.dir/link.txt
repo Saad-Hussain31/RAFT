@@ -1,0 +1,1 @@
+/usr/bin/g++ -fPIC -g -shared -Wl,-soname,libMockDynamicLibrary.so -o libMockDynamicLibrary.so CMakeFiles/MockDynamicLibrary.dir/src/MockDynamicLibrary.cpp.o 
