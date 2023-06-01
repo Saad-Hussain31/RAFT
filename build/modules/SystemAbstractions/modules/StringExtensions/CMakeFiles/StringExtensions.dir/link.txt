@@ -1,2 +1,0 @@
-/usr/bin/ar qc libStringExtensions.a CMakeFiles/StringExtensions.dir/src/StringExtensions.cpp.o
-/usr/bin/ranlib libStringExtensions.a

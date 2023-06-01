@@ -1,1 +1,0 @@
-/usr/bin/g++ -g CMakeFiles/MockSubprocessProgram.dir/src/main.cpp.o -o MockSubprocessProgram  ../../libSystemAbstractions.a -lStringExtensions -lpthread -ldl 
