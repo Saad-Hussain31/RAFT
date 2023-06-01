@@ -2,7 +2,11 @@ cmake_minimum_required(VERSION 3.20)
 project(RAFT)
 set(CMAKE_CXX_STANDARD 17)
 
-add_subdirectory(googletest)
+add_subdirectory(modules/googletest)
+add_subdirectory(modules/SystemAbstractions)
+
+
+
 include_directories(include)
 
 set(Headers
