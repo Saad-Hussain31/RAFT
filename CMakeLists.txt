@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.20)
 project(RAFT)
 set(CMAKE_CXX_STANDARD 17)
 
-set(systemPath 3rdparty/lib/libSystemAbstractions.a)
-set(stringPath 3rdparty/lib/libStringExtensions.a)
-
-
 
 add_subdirectory(modules/googletest)
 add_subdirectory(test)

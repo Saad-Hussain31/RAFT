@@ -6,7 +6,6 @@ namespace Raft {
     public:    
         virtual double getCurrentTime() = 0;
     };
-
 }
 
-#endif /* RAFT_TIME_KEEPER_HPP */
+#endif 

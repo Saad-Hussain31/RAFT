@@ -6,6 +6,7 @@
 
 
 
+
 namespace {
 
     struct MockTimeKeeper : public Raft::TimeKeeper {
@@ -47,13 +48,28 @@ struct ServerTests
             },
             0
         );
-        server.SetTimeKeeper(mockTimeKeeper);
+        server.setTimeKeeper(mockTimeKeeper);
     }
 
     virtual void TearDown() {
         diagnosticsUnsubscribeDelegate();
     }
 };
+
+TEST_F(ServerTests, InitialConfiguration) 
+{
+    Raft::Server::Configuration configuration;
+    configuration.instanceNumbers = {1,4,5,6,9};
+    configuration.selfInstanceNumber = 6;
+
+    server.configure(configuration);
+
+    const auto actualConfiguration = server.getConfiguration();
+
+    EXPECT_EQ(configuration.instanceNumbers, actualConfiguration.instanceNumbers );
+    EXPECT_EQ(configuration.selfInstanceNumber, actualConfiguration.selfInstanceNumber);
+    
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
