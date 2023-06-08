@@ -3,8 +3,8 @@
 
 namespace Raft {
     class TimeKeeper {
-    public:    
-        virtual double getCurrentTime() = 0;
+        public:    
+            virtual double getCurrentTime() = 0;
     };
 }
 

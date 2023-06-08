@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
-#include <Server.hpp>
+#include "Server.hpp"
+#include "Message.hpp"
 #include <TimeKeeper.hpp>
 #include <future>
 #include "StringExtensions/StringExtensions.hpp"
@@ -29,7 +30,18 @@ struct ServerTests
     std::vector< std::string > diagnosticMessages;
     SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate diagnosticsUnsubscribeDelegate;
     const std::shared_ptr< MockTimeKeeper > mockTimeKeeper = std::make_shared< MockTimeKeeper >();
-    std::promise<void> beginElection;
+    std::promise<std::shared_ptr<Raft::Message>> beginElection;
+    bool beginElectionWasSet = false;
+
+    void serverSentMessage(std::shared_ptr<Raft::Message> message) {
+        if(message->isElectionMessage()) {
+            if(!beginElectionWasSet) {
+                beginElectionWasSet = true;
+                beginElection.set_value(message);
+            }
+        }
+    }
+    
 
     virtual void SetUp() {
         diagnosticsUnsubscribeDelegate = server.SubscribeToDiagnostics(
@@ -50,6 +62,11 @@ struct ServerTests
             0
         );
         server.setTimeKeeper(mockTimeKeeper);
+        server.setSendMessageDelegate(
+            [this](std::shared_ptr<Raft::Message> message) {
+               serverSentMessage(message); 
+            }
+        )
     }
 
     virtual void TearDown() {
@@ -88,12 +105,12 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
     server.configure(configuration);
 
     //act
-    std::future<void> electionBegun = beginElection.get_future();
+    std::future<void> electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
-    EXPECT_NE(std::future_status::ready, electionBegun.wait_for(std::chrono::milliseconds(50)) );
+    EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );
 
     mockTimeKeeper->currentTime = 0.2;
-    EXPECT_EQ(std::future_status::ready, electionBegun.wait_for(std::chrono::milliseconds(50)) );
+    EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );
 
 
 }

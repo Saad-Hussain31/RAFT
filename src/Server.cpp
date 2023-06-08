@@ -43,6 +43,10 @@ namespace Raft {
         return true;
     }
 
+    void  Server::setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) {
+        
+    }
+
     auto Server::getConfiguration() const -> const Configuration& {
         return impl_->shared->configuration;
     }
