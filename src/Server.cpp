@@ -16,6 +16,7 @@ namespace Raft {
     struct Server::Impl {
         std::shared_ptr< ServerSharedProperties > shared = std::make_shared< ServerSharedProperties >();
         std::shared_ptr< TimeKeeper > timeKeeper;
+        SendMessageDelegate sendMessageDelegate;
     };
     
     Server::~Server() noexcept = default;
@@ -44,7 +45,7 @@ namespace Raft {
     }
 
     void  Server::setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) {
-        
+        impl_-> sendMessageDelegate = sendMessageDelegate;
     }
 
     auto Server::getConfiguration() const -> const Configuration& {

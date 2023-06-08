@@ -15,10 +15,12 @@ set(Headers
     include/Server.hpp
     include/LogEntry.hpp
     include/TimeKeeper.hpp
+    include/Message.hpp
 )
 
 set(Sources
     src/Server.cpp
+    src/Message.cpp
 )
 
 
