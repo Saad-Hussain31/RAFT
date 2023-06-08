@@ -23,8 +23,7 @@ namespace {
 }
 
 
-struct ServerTests
-    : public ::testing::Test {
+struct ServerTests : public ::testing::Test {
 
     Raft::Server server;
     std::vector< std::string > diagnosticMessages;
@@ -66,7 +65,7 @@ struct ServerTests
             [this](std::shared_ptr<Raft::Message> message) {
                serverSentMessage(message); 
             }
-        )
+        );
     }
 
     virtual void TearDown() {
@@ -105,7 +104,7 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
     server.configure(configuration);
 
     //act
-    std::future<void> electionBegan = beginElection.get_future();
+    auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
     EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );
 
