@@ -1,6 +1,4 @@
-#include "TimeKeeper.hpp"
-#include "Server.hpp"
-#include <SystemAbstractions/DiagnosticsSender.hpp>
+#include "include/Message.hpp"
 
 namespace {
     struct ServerSharedProperties {

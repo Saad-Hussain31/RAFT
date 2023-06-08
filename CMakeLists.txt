@@ -29,7 +29,7 @@ add_library(Raft STATIC ${Sources} ${Headers})
 
 target_link_libraries(Raft PUBLIC
                     /home/alma/raft/3rdparty/lib/libStringExtensions.a
-                    /home/alma/raft/3rdparty/lib/libSystemAbstractions.a
+                    /home/alma/raft/3rdparty/lib/libSystemAbstractions.a #for maknig things cross platform
                     )
 
 

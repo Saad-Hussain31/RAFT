@@ -10,10 +10,11 @@ namespace Raft {
     public:
         Server();
         ~Server() noexcept;
-        Server(const Server&) = delete;
-        Server(Server&&) noexcept;
-        Server& operator=(const Server&) = delete;
-        Server& operator=(Server&&) noexcept;
+        Server(const Server&) = delete; //copy ctr
+        Server(Server&&) noexcept; //move ctor
+        Server& operator=(const Server&) = delete; //copy asg operator
+        Server& operator=(Server&&) noexcept; //move asg operator
+        
         virtual bool configure(const Configuration& configuration) override;
         const Configuration& getConfiguration() const;
 
