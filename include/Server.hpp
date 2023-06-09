@@ -17,6 +17,8 @@ namespace Raft {
             
             virtual bool configure(const Configuration& configuration) override;
             const Configuration& getConfiguration() const;
+            void mobilize();
+            void demobilize();
             virtual void  setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) override;
 
 

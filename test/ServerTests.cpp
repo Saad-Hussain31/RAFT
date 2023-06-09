@@ -36,7 +36,7 @@ struct ServerTests : public ::testing::Test {
         if(message->isElectionMessage()) {
             if(!beginElectionWasSet) {
                 beginElectionWasSet = true;
-                beginElection.set_value(message);
+                beginElection.set_value(message); //gives back this 'message' to the future
             }
         }
     }

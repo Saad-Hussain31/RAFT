@@ -17,6 +17,7 @@ namespace Raft {
         std::shared_ptr< ServerSharedProperties > shared = std::make_shared< ServerSharedProperties >();
         std::shared_ptr< TimeKeeper > timeKeeper;
         SendMessageDelegate sendMessageDelegate;
+        void worker() {}
     };
     
     Server::~Server() noexcept = default;
@@ -52,5 +53,12 @@ namespace Raft {
         return impl_->shared->configuration;
     }
 
+    void Server::mobilize() {
+
+    }
+
+    void Server::demobilize() {
+        
+    }
 
 } 
