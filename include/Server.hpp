@@ -20,9 +20,9 @@ namespace Raft {
 
             void setTimeKeeper(std::shared_ptr<TimeKeeper> timeKeeper);
             const Configuration& getConfiguration() const;
-            void mobilize();
-            void demobilize();
-            void waitForAtleastOneWorkerLoop();
+            void mobilize(); //starts the server's worker thd
+            void demobilize(); //stops the server's worker thd
+            void waitForAtleastOneWorkerLoop(); //blocks until server's worker thd executes at least 1 more loop
             
 
 

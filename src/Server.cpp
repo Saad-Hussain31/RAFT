@@ -34,10 +34,16 @@ namespace Raft {
         }
 
 
+        /*
+        * Runs on the worker thread and check for messages from the leader. 
+        * If no message is received within a specified timeout, it starts a new election.
+        */
         void Worker() {
-            shared->diagnosticsSender.SendDiagnosticInformationString(0, "Worker thread started");
-            double timeOfLastLeaderMessage = timeKeeper->getCurrentTime();
-            auto workerAskedToStop = stopWorker.get_future();
+            shared->diagnosticsSender.SendDiagnosticInformationString(0, "Worker thread started"); //this is just a log with min severity
+            double timeOfLastLeaderMessage = timeKeeper->getCurrentTime(); //last time a message was received from the leader
+            auto workerAskedToStop = stopWorker.get_future(); //check if the worker has been asked to stop
+
+            //while the worker has not been asked to stop
             while(workerAskedToStop.wait_for(WORKER_POLLING_PERIOD) != std::future_status::ready) {
                 const auto singleWorkerLoopCompletion = makeWorkerThreadLoopPromiseIfNeeded();
                 const auto now  = timeKeeper->getCurrentTime();
@@ -59,8 +65,6 @@ namespace Raft {
             }
             shared->diagnosticsSender.SendDiagnosticInformationString(0, "Worker Thread stopping.");
         }
-        
-        
     };
     
     Server::~Server() noexcept = default;

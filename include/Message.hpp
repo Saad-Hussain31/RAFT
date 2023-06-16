@@ -13,8 +13,8 @@ namespace Raft {
             Message& operator=(Message&&) noexcept;
 
 
-            bool isElectionMessage() const;
-            void formElectinMessage();
+            bool isElectionMessage() const; //flag that tells whether a message is an election message
+            void formElectinMessage(); //forms the message to be a election message
         
         private:
             struct Impl;
