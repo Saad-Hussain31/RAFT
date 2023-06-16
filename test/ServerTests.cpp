@@ -69,6 +69,7 @@ struct ServerTests : public ::testing::Test {
     }
 
     virtual void TearDown() {
+        server.demobilize();
         diagnosticsUnsubscribeDelegate();
     }
 };
@@ -104,6 +105,7 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
     server.configure(configuration);
 
     //act
+    server.mobilize();
     auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
     EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );

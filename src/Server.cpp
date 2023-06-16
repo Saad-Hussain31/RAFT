@@ -35,7 +35,6 @@ namespace Raft {
                     message->formElectinMessage(); 
                     sendMessageDelegate(message);
                 }
-
             }
         }
         
