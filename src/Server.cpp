@@ -1,8 +1,12 @@
 #include "TimeKeeper.hpp"
 #include "Server.hpp"
 #include <SystemAbstractions/DiagnosticsSender.hpp>
+#include <thread>
+#include <future>
 
 namespace {
+    const std::chrono::milliseconds WORKER_POLLING_PERIOD = std::chrono::milliseconds(50);
+
     struct ServerSharedProperties {
         SystemAbstractions::DiagnosticsSender diagnosticsSender;
         Raft::IServer::Configuration configuration;
@@ -14,10 +18,28 @@ namespace {
 
 namespace Raft {
     struct Server::Impl {
+        //Properties
         std::shared_ptr< ServerSharedProperties > shared = std::make_shared< ServerSharedProperties >();
         std::shared_ptr< TimeKeeper > timeKeeper;
         SendMessageDelegate sendMessageDelegate;
-        void worker() {}
+        std::thread worker;
+        std::promise<void> stopWorker;
+        void Worker() {
+            double timeOfLastLeaderMessage = timeKeeper->getCurrentTime();
+            auto workerAskedToStop = stopWorker.get_future();
+            while(workerAskedToStop.wait_for(WORKER_POLLING_PERIOD) != std::future_status::ready) {
+                const auto now  = timeKeeper->getCurrentTime();
+                const auto timeSinceLastLeaderMessage = now - timeOfLastLeaderMessage;
+                if(timeSinceLastLeaderMessage >= shared->configuration.minimumTimeout) {
+                    const auto message = std::make_shared<Message>();
+                    message->formElectinMessage(); 
+                    sendMessageDelegate(message);
+                }
+
+            }
+        }
+        
+        
     };
     
     Server::~Server() noexcept = default;
@@ -54,11 +76,15 @@ namespace Raft {
     }
 
     void Server::mobilize() {
-
+        impl_->worker = std::thread(&Impl::Worker, impl_.get());
     }
 
     void Server::demobilize() {
-        
+        if(!impl_->worker.joinable())
+            return;
+        impl_->stopWorker.set_value();
+        impl_->worker.join();
+
     }
 
 } 

@@ -14,6 +14,7 @@ namespace Raft {
 
 
             bool isElectionMessage() const;
+            void formElectinMessage();
         
         private:
             struct Impl;

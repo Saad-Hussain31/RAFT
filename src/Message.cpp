@@ -19,5 +19,9 @@ namespace Raft {
         return impl_->isElectionMessage;
     }
 
+    void Message::formElectinMessage() {
+        impl_->isElectionMessage = true;
+    }
+
 
 } 
