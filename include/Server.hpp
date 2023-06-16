@@ -16,27 +16,23 @@ namespace Raft {
             Server& operator=(Server&&) noexcept; //move asg operator
             
             virtual bool configure(const Configuration& configuration) override;
+            virtual void  setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) override;
+
+            void setTimeKeeper(std::shared_ptr<TimeKeeper> timeKeeper);
             const Configuration& getConfiguration() const;
             void mobilize();
             void demobilize();
-            virtual void  setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) override;
+            void waitForAtleastOneWorkerLoop();
+            
 
 
             SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate SubscribeToDiagnostics(
                 SystemAbstractions::DiagnosticsSender::DiagnosticMessageDelegate delegate,
                 size_t minLevel = 0
             );
-            void setTimeKeeper(std::shared_ptr<TimeKeeper> timeKeeper);
-
-        
-
-        private:
             
+        private:
             struct Impl;
             std::unique_ptr<Impl> impl_;
-
     };
-
-
-
 }

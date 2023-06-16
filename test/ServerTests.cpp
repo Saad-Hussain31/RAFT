@@ -108,10 +108,11 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
     server.mobilize();
     auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
-    EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );
+    server.waitForAtleastOneWorkerLoop();
+    EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
 
     mockTimeKeeper->currentTime = 0.2;
-    EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(50)) );
+    EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
 
 
 }
