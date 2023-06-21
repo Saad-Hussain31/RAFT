@@ -1,5 +1,6 @@
 #include "TimeKeeper.hpp"
 #include "Server.hpp"
+#include "MessageImpl.hpp"
 #include <SystemAbstractions/DiagnosticsSender.hpp>
 #include <thread>
 #include <future>
@@ -49,8 +50,8 @@ namespace Raft {
                 const auto now  = timeKeeper->getCurrentTime();
                 const auto timeSinceLastLeaderMessage = now - timeOfLastLeaderMessage;
                 if(timeSinceLastLeaderMessage >= shared->configuration.minimumTimeout) {
-                    const auto message = std::make_shared<Message>();
-                    message->formElectinMessage(); 
+                    const auto message = Message::createMessage();
+                    message->impl_->isElectionMessage = true;
                     shared->diagnosticsSender.SendDiagnosticInformationString(1, "Timeout -- Starting new Election.");
                     sendMessageDelegate(message);
                 }

@@ -1,27 +1,28 @@
 #include "Message.hpp"
+#include "MessageImpl.hpp"
 
+
+namespace {
+    
+    std::shared_ptr<Raft::Message> createBaseMessage() {
+        return std::make_shared<Raft::Message>();
+    }
+}
 
 namespace Raft {
-    struct Message::Impl {
-        bool isElectionMessage = false;
-    };
     
     Message::~Message() noexcept = default;
     Message::Message(Message&&) noexcept = default;
     Message& Message::operator=(Message&&) noexcept = default;
 
+    std::function<std::shared_ptr<Message>()> Message::createMessage = createBaseMessage;
+
     Message::Message()
-        : impl_(new Impl())
+        : impl_(new MessageImpl())
     {
     }
 
     bool Message::isElectionMessage() const {
         return impl_->isElectionMessage;
     }
-
-    void Message::formElectinMessage() {
-        impl_->isElectionMessage = true;
-    }
-
-
 } 

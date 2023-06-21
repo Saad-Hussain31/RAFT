@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-
+#include <functional>
 
 namespace Raft {
     class Message {
@@ -12,13 +12,18 @@ namespace Raft {
             Message& operator=(const Message&) = delete;
             Message& operator=(Message&&) noexcept;
 
+            //Public class properties
+        public:
+            static std::function<std::shared_ptr<Message>()> createMessage; //factory function called by msg class to create new msg internally
+
+
 
             bool isElectionMessage() const; //flag that tells whether a message is an election message
-            void formElectinMessage(); //forms the message to be a election message
+            // static std::shared_ptr<Message> createElectionMessage(); //forms the message to be a election message. specific to the raft
         
-        private:
-            struct Impl;
-            std::unique_ptr<Impl> impl_;
+        //package-private properties (public but opaque)
+        public:
+            std::unique_ptr<struct MessageImpl> impl_; 
 
     };
 
