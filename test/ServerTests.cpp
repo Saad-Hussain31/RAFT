@@ -4,6 +4,7 @@
 #include <TimeKeeper.hpp>
 #include <future>
 #include "StringExtensions/StringExtensions.hpp"
+#include "src/MessageImpl.hpp"
 
 
 
@@ -33,7 +34,7 @@ struct ServerTests : public ::testing::Test {
     bool beginElectionWasSet = false;
 
     void serverSentMessage(std::shared_ptr<Raft::Message> message) {
-        if(message->isElectionMessage()) {
+        if(message->impl_->isElectionMessage) {
             if(!beginElectionWasSet) {
                 beginElectionWasSet = true;
                 beginElection.set_value(message); //gives back this 'message' to the future

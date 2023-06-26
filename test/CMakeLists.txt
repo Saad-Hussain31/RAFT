@@ -11,7 +11,7 @@ set(Sources ServerTests.cpp)
 add_executable(RaftTests ${Sources})
 
 
-
+target_include_directories(RaftTests PRIVATE ../)
 target_link_libraries(RaftTests PUBLIC
     gtest
     # Raft
