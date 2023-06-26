@@ -16,11 +16,13 @@ set(Headers
     include/LogEntry.hpp
     include/TimeKeeper.hpp
     include/Message.hpp
+    src/MessageImpl.hpp
 )
 
 set(Sources
     src/Server.cpp
     src/Message.cpp
+    src/MessageImpl.cpp
 )
 
 

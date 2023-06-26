@@ -34,7 +34,7 @@ struct ServerTests : public ::testing::Test {
     bool beginElectionWasSet = false;
 
     void serverSentMessage(std::shared_ptr<Raft::Message> message) {
-        if(message->impl_->isElectionMessage) {
+        if(message->impl_->type == Raft::MessageImpl::Type::Election) {
             if(!beginElectionWasSet) {
                 beginElectionWasSet = true;
                 beginElection.set_value(message); //gives back this 'message' to the future
@@ -97,7 +97,7 @@ TEST_F(ServerTests, InitialConfiguration)
 
 TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
 {
-    //arrange
+    //arrange: mocks and objects would be created
     Raft::Server::Configuration configuration;
     configuration.instanceNumbers = {1,2,3,4};
     configuration.selfInstanceNumber = 3;
@@ -105,7 +105,7 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
     configuration.maximumTimeout = 0.2;
     server.configure(configuration);
 
-    //act
+    //act: the invocation of the method being tested
     server.mobilize();
     auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
@@ -114,7 +114,6 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
 
     mockTimeKeeper->currentTime = 0.2;
     EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
-
 
 }
 
