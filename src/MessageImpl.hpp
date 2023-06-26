@@ -5,8 +5,4 @@ namespace Raft {
     struct MessageImpl {
         bool isElectionMessage = false;
     };
-    
-    
-
-
 } 

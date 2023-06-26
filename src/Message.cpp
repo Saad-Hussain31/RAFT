@@ -3,7 +3,6 @@
 
 
 namespace {
-    
     std::shared_ptr<Raft::Message> createBaseMessage() {
         return std::make_shared<Raft::Message>();
     }
@@ -22,7 +21,4 @@ namespace Raft {
     {
     }
 
-    bool Message::isElectionMessage() const {
-        return impl_->isElectionMessage;
-    }
 } 
