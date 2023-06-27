@@ -117,6 +117,28 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
 
 }
 
+TEST_F(ServerTests, ServerVotesForItselfInElectionItStarts)
+{
+    //arrange: mocks and objects would be created
+    Raft::Server::Configuration configuration;
+    configuration.instanceNumbers = {1,2,3,4,5};
+    configuration.selfInstanceNumber = 5;
+    configuration.minimumTimeout = 0.1;
+    configuration.maximumTimeout = 0.2;
+    server.configure(configuration);
+    server.mobilize();
+    server.waitForAtleastOneWorkerLoop();
+
+    //act: the invocation of the method being tested
+    
+    auto electionBegan = beginElection.get_future();
+    mockTimeKeeper->currentTime = 0.2;
+    const auto message = electionBegan.get();
+    
+    
+    EXPECT_EQ(5, message->impl_->election.candidateId);
+}
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
