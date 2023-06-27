@@ -52,6 +52,7 @@ namespace Raft {
                 if(timeSinceLastLeaderMessage >= shared->configuration.minimumTimeout) {
                     const auto message = Message::createMessage();
                     message->impl_->type = MessageImpl::Type::Election;
+                    message->impl_->election.candidateId = shared->configuration.selfInstanceNumber;
                     shared->diagnosticsSender.SendDiagnosticInformationString(1, "Timeout -- Starting new Election.");
                     sendMessageDelegate(message);
                 }
