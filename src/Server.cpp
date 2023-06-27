@@ -14,6 +14,7 @@ namespace {
         Raft::IServer::Configuration configuration;
         std::mutex mutex;
         std::shared_ptr<std::promise<void>> workerLoopCompletion;
+        double timeOfLastLeaderMessage = 0.0; //time when server either started or rcved msg from the leader
         ServerSharedProperties() : diagnosticsSender("Raft::Server") {}
 
     };
@@ -29,9 +30,33 @@ namespace Raft {
         std::thread worker;
         std::promise<void> stopWorker;
 
+        //Normal Methods
+
+        void updateTimeofLastLeaderMessage() {
+            std::lock_guard<decltype(shared->mutex)> lock(shared->mutex);
+            double timeOfLastLeaderMessage = timeKeeper->getCurrentTime(); //last time a message was received from the leader
+        }
+
+        double getTimeSinceLastLeaderMessage() {
+            std::lock_guard<decltype(shared->mutex)> lock(shared->mutex);
+            const auto now  = timeKeeper->getCurrentTime();
+            return  now - shared->timeOfLastLeaderMessage;
+        }
+
         bool makeWorkerThreadLoopPromiseIfNeeded() {
             std::lock_guard<decltype(shared->mutex)> lock(shared->mutex);
             return(shared->workerLoopCompletion != nullptr);
+        }
+
+        void startElection() {
+            std::lock_guard<decltype(shared->mutex)> lock(shared->mutex);
+            const auto message = Message::createMessage();
+            message->impl_->type = MessageImpl::Type::Election;
+            message->impl_->election.candidateId = shared->configuration.selfInstanceNumber;
+            message->impl_->election.term = ++shared->configuration.currentTerm;
+            shared->diagnosticsSender.SendDiagnosticInformationString(1, "Timeout -- Starting new Election.");
+            sendMessageDelegate(message);
+            shared->timeOfLastLeaderMessage = timeKeeper->getCurrentTime(); //reset timeout
         }
 
 
@@ -41,20 +66,14 @@ namespace Raft {
         */
         void Worker() {
             shared->diagnosticsSender.SendDiagnosticInformationString(0, "Worker thread started"); //this is just a log with min severity
-            double timeOfLastLeaderMessage = timeKeeper->getCurrentTime(); //last time a message was received from the leader
             auto workerAskedToStop = stopWorker.get_future(); //check if the worker has been asked to stop
 
             //while the worker has not been asked to stop
             while(workerAskedToStop.wait_for(WORKER_POLLING_PERIOD) != std::future_status::ready) {
                 const auto singleWorkerLoopCompletion = makeWorkerThreadLoopPromiseIfNeeded();
-                const auto now  = timeKeeper->getCurrentTime();
-                const auto timeSinceLastLeaderMessage = now - timeOfLastLeaderMessage;
+                const auto timeSinceLastLeaderMessage = getTimeSinceLastLeaderMessage();
                 if(timeSinceLastLeaderMessage >= shared->configuration.minimumTimeout) {
-                    const auto message = Message::createMessage();
-                    message->impl_->type = MessageImpl::Type::Election;
-                    message->impl_->election.candidateId = shared->configuration.selfInstanceNumber;
-                    shared->diagnosticsSender.SendDiagnosticInformationString(1, "Timeout -- Starting new Election.");
-                    sendMessageDelegate(message);
+                    startElection();
                 }
                 if(singleWorkerLoopCompletion) {
                     shared->workerLoopCompletion->set_value();
