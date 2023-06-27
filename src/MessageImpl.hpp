@@ -14,6 +14,7 @@ namespace Raft {
         
         struct ElectionDetails{ //holds message properties for Type::Election msgs
             unsigned int candidateId = 0; //instanceID of candidate requesting vote
+            unsigned int term = 0;
         };
         
         union { //holds properties specific to each type of message
