@@ -7,18 +7,25 @@ namespace Raft {
         //types of messages
         enum class Type {
             Unknown,
-            Election,
+            RequestVote,
+            RequestVoteResults,
         };
         
         Type type = Type::Unknown;
         
-        struct ElectionDetails{ //holds message properties for Type::Election msgs
+        struct RequestVoteDetails{ 
             unsigned int candidateId = 0; //instanceID of candidate requesting vote
             unsigned int term = 0;
         };
+
+         struct RequestVoteResultDetails{ 
+            unsigned int term = 0; 
+            unsigned int voteGranted = 0;
+        };
         
         union { //holds properties specific to each type of message
-            ElectionDetails election;
+            RequestVoteDetails requestVote;
+            RequestVoteResultDetails requstVoteResults;
         };
     
         MessageImpl();

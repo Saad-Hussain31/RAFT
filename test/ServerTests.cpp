@@ -3,6 +3,9 @@
 #include "Message.hpp"
 #include <TimeKeeper.hpp>
 #include <future>
+#include <condition_variable>
+#include <mutex>
+#include <vector>
 #include "StringExtensions/StringExtensions.hpp"
 #include "src/MessageImpl.hpp"
 
@@ -30,16 +33,22 @@ struct ServerTests : public ::testing::Test {
     std::vector< std::string > diagnosticMessages;
     SystemAbstractions::DiagnosticsSender::UnsubscribeDelegate diagnosticsUnsubscribeDelegate;
     const std::shared_ptr< MockTimeKeeper > mockTimeKeeper = std::make_shared< MockTimeKeeper >();
-    std::promise<std::shared_ptr<Raft::Message>> beginElection;
-    bool beginElectionWasSet = false;
+    std::vector<std::shared_ptr<Raft::Message>> messagesSent;
+    std::mutex messagesSentMutex;
+    std::condition_variable messagesSentCondition;
+
+    bool awaitServerMessagesToBeSent(size_t numMessages) {
+        std::unique_lock<decltype(messagesSentMutex)> lock(messagesSentMutex);
+        return messagesSentCondition.wait_for(lock, std::chrono::milliseconds(1000), 
+        [this, numMessages] {return messagesSent.size() >= numMessages; });
+    }
 
     void serverSentMessage(std::shared_ptr<Raft::Message> message) {
-        if(message->impl_->type == Raft::MessageImpl::Type::Election) {
-            if(!beginElectionWasSet) {
-                beginElectionWasSet = true;
-                beginElection.set_value(message); //gives back this 'message' to the future
-            }
-        }
+
+        std::lock_guard<decltype(messagesSentMutex)> lock(messagesSentMutex);
+        messagesSent.push_back(message);
+        messagesSentCondition.notify_one();
+            
     }
     
 
@@ -136,7 +145,7 @@ TEST_F(ServerTests, ServerVotesForItselfInElectionItStarts)
     const auto message = electionBegan.get();
     
     
-    EXPECT_EQ(5, message->impl_->election.candidateId);
+    EXPECT_EQ(5, message->impl_->requestVote.candidateId);
 }
 
 TEST_F(ServerTests, ServerIncrementsTermsInElectionItStarts)
@@ -152,15 +161,34 @@ TEST_F(ServerTests, ServerIncrementsTermsInElectionItStarts)
     server.waitForAtleastOneWorkerLoop();
 
     //act: the invocation of the method being tested
-    
     auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.2;
     const auto message = electionBegan.get();
-    
-    
-    EXPECT_EQ(1, message->impl_->election.term);
+    EXPECT_EQ(1, message->impl_->requestVote.term);
 }
 
+
+TEST_F (ServerTests, ServerDoesReceiveMajorityVoteInElection) {
+    //arrange
+    Raft::Server::Configuration configuration;
+    configuration.instanceNumbers = {1,2,3,4,5};
+    configuration.selfInstanceNumber = 5;
+    configuration.minimumTimeout = 0.1;
+    configuration.maximumTimeout = 0.2;
+    server.configure(configuration);
+    server.mobilize();
+    server.waitForAtleastOneWorkerLoop();
+    auto electionBegan = beginElection.get_future();
+    mockTimeKeeper->currentTime = 0.2;
+    (void)electionBegan.get();
+
+    //act
+    const auto message = Raft::Message::createMessage();
+    message->impl_->type = Raft::MessageImpl::Type::RequestVoteResults;
+
+    
+   
+}
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

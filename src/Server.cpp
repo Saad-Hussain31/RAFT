@@ -51,9 +51,9 @@ namespace Raft {
         void startElection() {
             std::lock_guard<decltype(shared->mutex)> lock(shared->mutex);
             const auto message = Message::createMessage();
-            message->impl_->type = MessageImpl::Type::Election;
-            message->impl_->election.candidateId = shared->configuration.selfInstanceNumber;
-            message->impl_->election.term = ++shared->configuration.currentTerm;
+            message->impl_->type = MessageImpl::Type::RequestVote;
+            message->impl_->requestVote.candidateId = shared->configuration.selfInstanceNumber;
+            message->impl_->requestVote.term = ++shared->configuration.currentTerm;
             shared->diagnosticsSender.SendDiagnosticInformationString(1, "Timeout -- Starting new Election.");
             sendMessageDelegate(message);
             shared->timeOfLastLeaderMessage = timeKeeper->getCurrentTime(); //reset timeout
