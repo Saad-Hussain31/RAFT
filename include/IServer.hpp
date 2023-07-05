@@ -19,5 +19,7 @@ namespace Raft {
 
             using SendMessageDelegate = std::function<void(std::shared_ptr<Message> message)>;
             virtual void setSendMessageDelegate(SendMessageDelegate setSendMessageDelegate) = 0;
+            virtual void receiveMessage(std::shared_ptr<Message> message, unsigned int senderInstanceNumber) = 0;
+            virtual bool isLeader() = 0;
     };
 }

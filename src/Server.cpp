@@ -15,6 +15,7 @@ namespace {
         std::mutex mutex;
         std::shared_ptr<std::promise<void>> workerLoopCompletion;
         double timeOfLastLeaderMessage = 0.0; //time when server either started or rcved msg from the leader
+        bool isLeader = false;
         ServerSharedProperties() : diagnosticsSender("Raft::Server") {}
 
     };
@@ -139,6 +140,18 @@ namespace Raft {
         lock.unlock();
         workerLoopWasCompleted.wait();
 
+    }
+
+    void Server::receiveMessage(std::shared_ptr<Message> message, unsigned int senderInstanceNumber) {
+        switch(message->impl_->type) {
+            case MessageImpl::Type::RequestVoteResults: {
+            } break;
+            default:{} break;
+        }
+    }
+
+    bool Server::isLeader() {
+        return impl_->shared->isLeader;
     }
 
 } 

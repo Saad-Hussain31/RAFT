@@ -17,6 +17,8 @@ namespace Raft {
             
             virtual bool configure(const Configuration& configuration) override;
             virtual void  setSendMessageDelegate(SendMessageDelegate sendMessageDelegate) override;
+            virtual void receiveMessage(std::shared_ptr<Message> message, unsigned int senderInstanceNumber) override;
+            virtual bool isLeader() override;
 
             void setTimeKeeper(std::shared_ptr<TimeKeeper> timeKeeper);
             const Configuration& getConfiguration() const;

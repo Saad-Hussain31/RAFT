@@ -39,8 +39,9 @@ struct ServerTests : public ::testing::Test {
 
     bool awaitServerMessagesToBeSent(size_t numMessages) {
         std::unique_lock<decltype(messagesSentMutex)> lock(messagesSentMutex);
-        return messagesSentCondition.wait_for(lock, std::chrono::milliseconds(1000), 
-        [this, numMessages] {return messagesSent.size() >= numMessages; });
+        return messagesSentCondition.wait_for(lock,
+               std::chrono::milliseconds(1000), 
+               [this, numMessages] {return messagesSent.size() >= numMessages; });
     }
 
     void serverSentMessage(std::shared_ptr<Raft::Message> message) {
@@ -116,13 +117,24 @@ TEST_F(ServerTests, ElectionStartedAfterProperTimeoutInterval)
 
     //act: the invocation of the method being tested
     server.mobilize();
-    auto electionBegan = beginElection.get_future();
+   //auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.0999;
     server.waitForAtleastOneWorkerLoop();
-    EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
+
+    EXPECT_EQ(0, messagesSent.size()); //new 
+   
+    //EXPECT_NE(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
 
     mockTimeKeeper->currentTime = 0.2;
-    EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
+
+    EXPECT_TRUE(awaitServerMessagesToBeSent(4));
+   // EXPECT_EQ(std::future_status::ready, electionBegan.wait_for(std::chrono::milliseconds(100)) );
+
+    //assert
+    for(const auto message : messagesSent) {
+        EXPECT_EQ(Raft::MessageImpl::Type::RequestVote, message->impl_->type);
+        EXPECT_EQ(5, message->impl_->requestVote.candidateId);
+    }
 
 }
 
@@ -140,12 +152,18 @@ TEST_F(ServerTests, ServerVotesForItselfInElectionItStarts)
 
     //act: the invocation of the method being tested
     
-    auto electionBegan = beginElection.get_future();
+   //auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.2;
-    const auto message = electionBegan.get();
+    (void)awaitServerMessagesToBeSent(4);
+    // const auto message = electionBegan.get();
+    
+
+    for(const auto message : messagesSent) {
+      //  EXPECT_EQ(Raft::MessageImpl::Type::RequestVote, message->impl_->type);
+        EXPECT_EQ(5, message->impl_->requestVote.candidateId);
+    }
     
     
-    EXPECT_EQ(5, message->impl_->requestVote.candidateId);
 }
 
 TEST_F(ServerTests, ServerIncrementsTermsInElectionItStarts)
@@ -161,14 +179,20 @@ TEST_F(ServerTests, ServerIncrementsTermsInElectionItStarts)
     server.waitForAtleastOneWorkerLoop();
 
     //act: the invocation of the method being tested
-    auto electionBegan = beginElection.get_future();
+    // auto electionBegan = beginElection.get_future();
+    
     mockTimeKeeper->currentTime = 0.2;
-    const auto message = electionBegan.get();
-    EXPECT_EQ(1, message->impl_->requestVote.term);
+    // const auto message = electionBegan.get();
+    (void)awaitServerMessagesToBeSent(4);
+
+    for(const auto message : messagesSent) {
+        EXPECT_EQ(1, message->impl_->requestVote.term);
+    }
+    
 }
 
 
-TEST_F (ServerTests, ServerDoesReceiveMajorityVoteInElection) {
+TEST_F (ServerTests, ServerDoesReceiveUnanimousVoteInElection) {
     //arrange
     Raft::Server::Configuration configuration;
     configuration.instanceNumbers = {1,2,3,4,5};
@@ -178,15 +202,62 @@ TEST_F (ServerTests, ServerDoesReceiveMajorityVoteInElection) {
     server.configure(configuration);
     server.mobilize();
     server.waitForAtleastOneWorkerLoop();
-    auto electionBegan = beginElection.get_future();
+    // auto electionBegan = beginElection.get_future();
     mockTimeKeeper->currentTime = 0.2;
-    (void)electionBegan.get();
+    (void)awaitServerMessagesToBeSent(4);
+    // (void)electionBegan.get();
 
     //act
-    const auto message = Raft::Message::createMessage();
-    message->impl_->type = Raft::MessageImpl::Type::RequestVoteResults;
-
     
+    for(auto instance : configuration.instanceNumbers) {
+        const auto message = Raft::Message::createMessage();
+        message->impl_->type = Raft::MessageImpl::Type::RequestVoteResults;
+        message->impl_->requstVoteResults.term = 0;
+        message->impl_->requstVoteResults.voteGranted = true;
+        server.receiveMessage(message, instance);
+    }
+
+    //ASSERT:
+    EXPECT_TRUE(server.isLeader());
+   
+}
+
+
+
+TEST_F (ServerTests, ServerDoesReceiveNonUnanimousMajorityVoteInElection) {
+    //arrange
+    Raft::Server::Configuration configuration;
+    configuration.instanceNumbers = {1,2,3,4,5};
+    configuration.selfInstanceNumber = 5;
+    configuration.minimumTimeout = 0.1;
+    configuration.maximumTimeout = 0.2;
+    server.configure(configuration);
+    server.mobilize();
+    server.waitForAtleastOneWorkerLoop();
+    // auto electionBegan = beginElection.get_future();
+    mockTimeKeeper->currentTime = 0.2;
+    (void)awaitServerMessagesToBeSent(4);
+    // (void)electionBegan.get();
+
+    //act
+    
+    for(auto instance : configuration.instanceNumbers) {
+        const auto message = Raft::Message::createMessage();
+        message->impl_->type = Raft::MessageImpl::Type::RequestVoteResults;
+        
+        if(instance == 11) {
+            message->impl_->requstVoteResults.term = 1;
+            message->impl_->requstVoteResults.voteGranted = false;
+        } else {
+            message->impl_->requstVoteResults.term =0;
+            message->impl_->requstVoteResults.voteGranted = true;
+        }
+        
+        server.receiveMessage(message, instance);
+    }
+
+    //ASSERT:
+    EXPECT_TRUE(server.isLeader());
    
 }
 
